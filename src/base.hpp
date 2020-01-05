@@ -444,7 +444,7 @@ private:
         curUser = suStack.top(), suStack.pop();
     }
     void addUser(const string &id, const string &password, const string &name, int type) {
-        // debug << "in adduser id = " << id << "type = " << type << "cur = " << curUser << endl;
+        // debug << "in adduser id = " << id << "type = " << type << "cur = " << curUser.type << endl;
         if(type != -1 && curUser.type < 3) return invalid();
         if(type >= curUser.type) return invalid();
         if(type == -1) type = 1;
@@ -649,11 +649,11 @@ private:
     void work() {
         Input in;
         FileChecker checkFile;
-        if(checkFile("command.txt")) {
-            in.hook("command.txt");
-            suStack.push(curUser);
-            curUser.type = 7;
-        }
+        if(checkFile("command.txt")) in.hook("command.txt");
+        curUser.type = 0;
+        suStack.push(curUser);
+        curUser.type = 7;
+
         string line;
         while(in.getLine(line)) {
             debug << line << endl;
@@ -767,7 +767,6 @@ public:
         db[2].init(AUTHOR, "db_author_");
         db[3].init(KEYWORD, "db_keyword_");
         nullBook = 1;
-        curUser.type = 0;
         init();
         work();
     }
