@@ -168,8 +168,8 @@ public:
             try {
                 t = pool.getBook(isbn);
             } catch(BookNotFound) {
-                debug << "Book Not Found when requesting bookPool, this shouldn't happen." << endl;
-                debug << "Please check your dataBase update policy." << endl;
+                // debug << "Book Not Found when requesting bookPool, this shouldn't happen." << endl;
+                // debug << "Please check your dataBase update policy." << endl;
                 continue;
             }
             if(cur != KEYWORD) {
@@ -190,7 +190,7 @@ public:
         string path = pathPrf + hashStr.toString(tar) + pathSuf;
 
         if(!checkFile(path)) {
-            debug << "Nothing to Remove, this may because you are selecting a book that not exist." << endl;
+            // debug << "Nothing to Remove, this may because you are selecting a book that not exist." << endl;
             return;
         }
 
@@ -238,7 +238,7 @@ public:
 
             FileChecker checkFile;
             if(!checkFile(path)) {
-                debug << "file not found in showALL, check your maintain policy." << endl;
+                // debug << "file not found in showALL, check your maintain policy." << endl;
                 continue;
             }
 
@@ -249,8 +249,8 @@ public:
                 try {
                     t = bp.getBook(s);
                 } catch(BookNotFound) {
-                    debug << "Book Not Found when requesting bookPool, this shouldn't happen" << endl;
-                    debug << "Please check your dataBase update policy" << endl;
+                    // debug << "Book Not Found when requesting bookPool, this shouldn't happen" << endl;
+                    // debug << "Please check your dataBase update policy" << endl;
                     continue;
                 }
                 ret.push_back(t);
@@ -350,7 +350,6 @@ public:
         }
     }
     void addIncome(double x) {
-        debug << "add income " << x << endl;
         int location = file.tellp();
         file.seekp(location - 16);
         incomeSum += x;
@@ -359,7 +358,6 @@ public:
         file.write(reinterpret_cast<char*> (&outcomeSum), 8);
     }
     void addOutcome(double x) {
-        debug << "add outcome " << x << endl;
         int location = file.tellp();
         file.seekp(location - 16);
         outcomeSum += x, x = -x;
@@ -372,7 +370,7 @@ public:
     }
     void showTime(int t) {
         int location = file.tellp();
-        debug << "location = " << location << "t = " << t << endl;
+        // debug << "location = " << location << "t = " << t << endl;
         if(location < (t + 2) * 8) {
             cout << "Invalid" << endl;
             return;
@@ -559,14 +557,12 @@ private:
         vector<Book> ans = argType != -1 ? db[argType].searchBook(arg, bp) : db[ISBN].showAll(bp);
         sort(ans.begin(), ans.end());
         int size = unique(ans.begin(), ans.end()) - ans.begin();
-        debug << "uniqued size = " << size << endl;
         for(int i = 0; i < size; i++) {
             auto &t = ans[i];
             for(int i = 0; i < 4; i++) cout << t.data[i] << '\t';
             cout << setprecision(2) << fixed << toDouble(t.data[4]) << '\t';
             cout << t.rem << "本" << endl; // todo: encoding.
         }
-        // if(!ans.size()) cout << endl;
     }
     void showFinance(int arg) {
         if(curUser.type != 7) return invalid();
@@ -647,7 +643,7 @@ private:
 
         string line;
         while(in.getLine(line)) {
-            debug << line << endl;
+            // debug << line << endl;
             reduce(line);
             stringstream ss;
             ss << line;
@@ -701,7 +697,6 @@ private:
                 } catch (getTargetFailed) {
                     invalid(); continue;
                 }
-                debug << "nw = " << nw << endl;
                 modifyBook(nw);
             } else if(com == "import") {
                 int quantity = -1;
@@ -747,7 +742,7 @@ private:
                 return;
             }
             else invalid();
-            debug << "==================================================" << endl;
+            // debug << "==================================================" << endl;
         }
     }
 public:
