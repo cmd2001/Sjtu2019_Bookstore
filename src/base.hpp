@@ -629,6 +629,9 @@ private:
         }
         return ret;
     }
+    void reduce(string &s) {
+        while(s.length() && isspace(s[s.length() - 1])) s.resize(s.length() - 1);
+    }
     void work() {
         Input in;
         FileChecker checkFile;
@@ -640,49 +643,62 @@ private:
         string line;
         while(in.getLine(line)) {
             debug << line << endl;
+            reduce(line);
             stringstream ss;
             ss << line;
             string com;
             ss >> com;
             // ?! todo:: load
+#define checkSS() if(!ss.eof()) {invalid(); continue;}
             if(com == "su") {
                 string uid, pswd;
                 ss >> uid >> pswd;
+                if(uid == "") {invalid(); continue;}
+                checkSS();
                 su(uid, pswd);
-            } else if(com == "logout") logOut();
-            else if(com == "useradd") {
+            } else if(com == "logout") {
+                checkSS();
+                logOut();
+            } else if(com == "useradd") {
                 string id, pswd, name;
-                int type;
+                int type = -1;
                 ss >> id >> pswd >> type >> name;
+                if(id == "" || pswd == "" || type == -1 || name == "") {invalid(); continue;}
+                checkSS();
                 addUser(id, pswd, name, type);
             } else if(com == "register") {
                 string id, pswd, name;
                 ss >> id >> pswd >> name;
-                if(id == "" || pswd == "" || name == "" || !ss.eof()) {
-                    invalid();
-                    continue;
-                }
+                if(id == "" || pswd == "" || name == "" || !ss.eof()) {invalid(); continue;}
                 addUser(id, pswd, name, -1);
             } else if(com == "delete") {
                 string id;
                 ss >> id;
+                if(id == "") continue;
+                checkSS();
                 deleteUser(id);
             } else if(com == "passwd") {
                 string id, old, nw = "";
                 ss >> id >> old >> nw;
+                if(id == "" || old == "") {invalid(); continue;}
+                checkSS();
                 passwdUser(id, old, nw);
             } else if(com == "select") {
                 string isbn;
                 ss >> isbn;
+                if(isbn == "") {invalid(); continue;}
+                checkSS();
                 selectBook(isbn);
-            } else if(com == "modify") {
+            } else if(com == "modify") { // todo: getTarget invalid.
                 Book nw = getTarget(line);
                 debug << "nw = " << nw << endl;
                 modifyBook(nw);
             } else if(com == "import") {
-                int quantity;
+                int quantity = -1;
                 string cost;
                 ss >> quantity >> cost;
+                if(quantity == -1 || cost == "") {invalid(); continue;}
+                checkSS();
                 importBook(quantity, cost);
             } else if(com == "show") {
                 string test;
@@ -690,6 +706,7 @@ private:
                 if(test == "finance") {
                     int time = -1;
                     ss >> time;
+                    checkSS();
                     showFinance(time);
                 } else {
                     Book tar = getTarget(line);
@@ -703,10 +720,15 @@ private:
                 }
             } else if(com == "buy") {
                 string isbn;
-                int v;
+                int v = -1;
                 ss >> isbn >> v;
+                if(isbn == "" || v == -1) {invalid(); continue;}
+                checkSS();
                 buyBook(isbn, v);
-            } else if(com == "exit") return;
+            } else if(com == "exit") {
+                checkSS();
+                return;
+            }
             else invalid();
             debug << "==================================================" << endl;
         }
