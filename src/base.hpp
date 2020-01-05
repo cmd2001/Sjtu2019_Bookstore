@@ -568,7 +568,7 @@ private:
     void showBook(const int argType, const string &arg) {
         // debug << "type = " << curUser.type << endl;
         if(curUser.type < 1) return invalid();
-        // if(argType == -1 && curUser.type != 7) return invalid(); // !? todo
+        if(argType == -1 && curUser.type < 1) return invalid(); // !? todo
         // debug << "in sb arg = " << argType << endl;
         // debug << "calling db.sb" << endl;
         vector<Book> ans = argType != -1 ? db[argType].searchBook(arg, bp) : db[ISBN].showAll(bp);
@@ -576,7 +576,7 @@ private:
         for(auto t: ans) {
             for(int i = 0; i < 4; i++) cout << t.data[i] << '\t';
             cout << setprecision(2) << fixed << toDouble(t.data[4]) << '\t';
-            cout << t.rem << "B" << endl;
+            cout << t.rem << "本" << endl; // todo: encoding.
         }
         // if(!ans.size()) cout << endl;
     }
