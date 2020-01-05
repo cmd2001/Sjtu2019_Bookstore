@@ -576,7 +576,7 @@ private:
         for(auto t: ans) {
             for(int i = 0; i < 4; i++) cout << t.data[i] << '\t';
             cout << setprecision(2) << fixed << toDouble(t.data[4]) << '\t';
-            cout << t.rem << "本" << endl;
+            cout << t.rem << "B" << endl;
         }
         // if(!ans.size()) cout << endl;
     }
