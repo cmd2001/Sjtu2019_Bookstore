@@ -56,6 +56,9 @@ struct Book {
     friend bool operator < (const Book &a, const Book &b) {
         return *a.data < *b.data;
     }
+    friend bool operator == (const Book &a, const Book &b) {
+        return a.data[0] == b.data[0];
+    }
 };
 
 // only storage book id in database, access book data by its id.
@@ -154,12 +157,9 @@ public:
         StringHasher hashStr;
         FileChecker checkFile;
         string path = pathPrf + hashStr.toString(tar) + pathSuf;
-        // debug << "path = " << path << endl;
         vector<Book> ret;
 
         if(!checkFile(path)) return ret;
-
-        // debug << "in sb tar = " << tar << endl;
 
         ifstream fin(path.c_str());
         string isbn;
@@ -353,23 +353,19 @@ public:
         debug << "add income " << x << endl;
         int location = file.tellp();
         file.seekp(location - 16);
-        // debug << "seeked p = " << file.tellp() << endl;
         incomeSum += x;
         file.write(reinterpret_cast<char*> (&x), 8);
         file.write(reinterpret_cast<char*> (&incomeSum), 8);
         file.write(reinterpret_cast<char*> (&outcomeSum), 8);
-        // debug << "added tp = " << file.tellp() << endl;
     }
     void addOutcome(double x) {
         debug << "add outcome " << x << endl;
         int location = file.tellp();
         file.seekp(location - 16);
-        // debug << "seeked p = " << file.tellp() << endl;
         outcomeSum += x, x = -x;
         file.write(reinterpret_cast<char*> (&x), 8);
         file.write(reinterpret_cast<char*> (&incomeSum), 8);
         file.write(reinterpret_cast<char*> (&outcomeSum), 8);
-        // debug << "added tp = " << file.tellp() << endl;
     }
     void showAll() {
         cout << setprecision(2) << fixed << "+ " << incomeSum << " - " << outcomeSum << endl;
@@ -423,7 +419,6 @@ private:
         cout << "Invalid" << endl;
     }
     void su(const string &id, const string &password) {
-        // debug << "id = " << id << "pswd = " << password << endl;
         User tar;
         try {
             tar = us.findUser(id);
@@ -444,7 +439,6 @@ private:
         curUser = suStack.top(), suStack.pop();
     }
     void addUser(const string &id, const string &password, const string &name, int type) {
-        // debug << "in adduser id = " << id << "type = " << type << "cur = " << curUser.type << endl;
         if(type != -1 && curUser.type < 3) return invalid();
         if(type >= curUser.type) return invalid();
         if(type == -1) type = 1;
@@ -487,7 +481,6 @@ private:
         vector<string> ret;
         unsigned i = 0, cur = 0;
         for(i = 0, cur = 0; i < x.length(); i++) if(x[i] == '|') {
-            // debug << "cur = " << cur << "i = " << i << endl;
             string t = x.substr(cur, i - cur);
             ret.push_back(t), cur = i + 1;
         }
@@ -500,7 +493,6 @@ private:
         try {
             curBook = bp.getBook(isbn);
         } catch (BookNotFound) {
-            // debug << "in select book not found" << endl;
             curExist = 0;
             curBook = (Book){isbn, "", "", "", "", 0};
         }
@@ -508,7 +500,6 @@ private:
     void modifyBook(Book tar) {
         if(nullBook) return invalid();
         if(curUser.type < 3) return invalid();
-        // debug << "in modify tar = " << tar << endl;
         if(tar.data[ISBN] != "") {
             bool flag = 1;
             try {
@@ -528,10 +519,7 @@ private:
         curExist = 1;
         for(int i = 0; i < 5; i++) if(tar.data[i] != "") curBook.data[i] = tar.data[i];
         for(int i = 0; i < 3; i++) db[i].addBook(curBook);
-        // debug << "new keyword = " << curBook.data[KEYWORD] << endl;
-        // debug << "splitting by |" << endl;
         vector<string> keywords = splitStr(curBook.data[KEYWORD]);
-        // debug << "split finished" << endl;
         for(auto t: keywords) db[KEYWORD].addBook(curBook, t);
         bp.addBook(curBook);
     }
@@ -566,14 +554,14 @@ private:
         fl.addIncome(toDouble(t.data[PRICE]) * v);
     }
     void showBook(const int argType, const string &arg) {
-        // debug << "type = " << curUser.type << endl;
         if(curUser.type < 1) return invalid();
-        if(argType == -1 && curUser.type < 1) return invalid(); // !? todo
-        // debug << "in sb arg = " << argType << endl;
-        // debug << "calling db.sb" << endl;
+        // if(argType == -1 && curUser.type < 3) return invalid(); // !? todo
         vector<Book> ans = argType != -1 ? db[argType].searchBook(arg, bp) : db[ISBN].showAll(bp);
         sort(ans.begin(), ans.end());
-        for(auto t: ans) {
+        int size = unique(ans.begin(), ans.end()) - ans.begin();
+        debug << "uniqued size = " << size << endl;
+        for(int i = 0; i < size; i++) {
+            auto &t = ans[i];
             for(int i = 0; i < 4; i++) cout << t.data[i] << '\t';
             cout << setprecision(2) << fixed << toDouble(t.data[4]) << '\t';
             cout << t.rem << "本" << endl; // todo: encoding.
@@ -593,10 +581,8 @@ private:
         unsigned i = 0, j = 0;
         while(i < s.length() && s[i] == ' ') i++;
         while(i < s.length() && s[i] != ' ') i++;
-        // debug << "initial i = " << i << endl;
         for(i++; i < s.length(); i = j + 1) { // !? what if the same argument appears twice ? todo
             str = s.substr(i, s.length() - i);
-            // debug << "first str = " << str << endl;
             if(str.substr(0, 6) == "-ISBN=") {
                 for(j = i; j < s.length() && s[j] != ' '; j++) ;
 
@@ -638,6 +624,11 @@ private:
 
                 string s2 = str.substr(7, j - i - 7);
                 if(ret.data[PRICE] != "") throw getTargetFailed();
+                bool flag = 0;
+                for(auto t: s2) if(!isdigit(t)) {
+                    if(t != '.' || flag) throw getTargetFailed();
+                    flag = 1;
+                }
                 ret.data[PRICE] = s2;
             } else throw getTargetFailed();
         }
@@ -734,7 +725,6 @@ private:
                     } catch (getTargetFailed) {
                         invalid(); continue;
                     }
-                    // debug << "target = " << tar << endl;
                     int tag = 0;
                     for(int i = 0; i < 4; i++) if(tar.data[i] != "")  tag |= (1 << i);
                     if(tag != (tag & -tag)) {invalid(); continue;} // multiple argument.
