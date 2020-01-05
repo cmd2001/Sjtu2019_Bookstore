@@ -586,6 +586,7 @@ private:
         else fl.showTime(arg);
     }
 
+    class getTargetFailed {};
     Book getTarget(const string &s) {
         Book ret = (Book){"", "", "", "", "", 0};
         string str;
@@ -598,34 +599,47 @@ private:
             // debug << "first str = " << str << endl;
             if(str.substr(0, 6) == "-ISBN=") {
                 for(j = i; j < s.length() && s[j] != ' '; j++) ;
+
                 string s2 = str.substr(6, j - i - 6);
+                if(ret.data[ISBN] != "") throw getTargetFailed();
                 ret.data[ISBN] = s2;
             } else if(str.substr(0, 7) == "-name=\"") {
-                for(j = i; s[j] != '\"'; j++) ;
+                for(j = i; j < s.length() && s[j] != '\"'; j++) ;
                 j++;
-                for(; s[j] != '\"'; j++) ;
+                for(; j < s.length() && s[j] != '\"'; j++) ;
+                if(j >= s.length()) throw getTargetFailed();
+
                 string s2 = str.substr(7, j - i - 7);
+                if(ret.data[NAME] != "") throw getTargetFailed();
                 ret.data[NAME] = s2;
                 j++;
             } else if(str.substr(0, 9) == "-author=\"") {
-                for(j = i; s[j] != '\"'; j++) ;
+                for(j = i; j < s.length() && s[j] != '\"'; j++) ;
                 j++;
-                for(; s[j] != '\"'; j++) ;
+                for(; j < s.length() && s[j] != '\"'; j++) ;
+                if(j >= s.length()) throw getTargetFailed();
+
                 string s2 = str.substr(9, j - i - 9);
+                if(ret.data[AUTHOR] != "") throw getTargetFailed();
                 ret.data[AUTHOR] = s2;
                 j++;
             } else if(str.substr(0, 10) == "-keyword=\"") {
-                for(j = i; s[j] != '\"'; j++) ;
+                for(j = i; j < s.length() && s[j] != '\"'; j++) ;
                 j++;
-                for(; s[j] != '\"'; j++) ;
+                for(; j < s.length() && s[j] != '\"'; j++) ;
+                if(j >= s.length()) throw getTargetFailed();
+
                 string s2 = str.substr(10, j - i - 10);
+                if(ret.data[KEYWORD] != "") throw getTargetFailed();
                 ret.data[KEYWORD] = s2;
                 j++;
             } else if(str.substr(0, 7) == "-price=") {
                 for(j = i; j < s.length() && s[j] != ' '; j++) ;
+
                 string s2 = str.substr(7, j - i - 7);
+                if(ret.data[PRICE] != "") throw getTargetFailed();
                 ret.data[PRICE] = s2;
-            }
+            } else throw getTargetFailed();
         }
         return ret;
     }
@@ -690,7 +704,12 @@ private:
                 checkSS();
                 selectBook(isbn);
             } else if(com == "modify") { // todo: getTarget invalid.
-                Book nw = getTarget(line);
+                Book nw;
+                try {
+                    nw = getTarget(line);
+                } catch (getTargetFailed) {
+                    invalid(); continue;
+                }
                 debug << "nw = " << nw << endl;
                 modifyBook(nw);
             } else if(com == "import") {
@@ -709,8 +728,16 @@ private:
                     checkSS();
                     showFinance(time);
                 } else {
-                    Book tar = getTarget(line);
+                    Book tar;
+                    try {
+                        tar = getTarget(line);
+                    } catch (getTargetFailed) {
+                        invalid(); continue;
+                    }
                     // debug << "target = " << tar << endl;
+                    int tag = 0;
+                    for(int i = 0; i < 4; i++) if(tar.data[i] != "")  tag |= (1 << i);
+                    if(tag != (tag & -tag)) {invalid(); continue;} // multiple argument.
                     bool flag = 0;
                     for(int i = 0; i < 4; i++) if(tar.data[i] != "") {
                         showBook(i, tar.data[i]);
